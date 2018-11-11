@@ -4,11 +4,12 @@ import com.google.inject.{AbstractModule, Provides}
 import com.mohiva.play.silhouette.api.crypto.{Crypter, CrypterAuthenticatorEncoder, Signer}
 import com.mohiva.play.silhouette.api.services.AuthenticatorService
 import com.mohiva.play.silhouette.api.util._
-import com.mohiva.play.silhouette.api.{Environment, EventBus}
-import com.mohiva.play.silhouette.crypto.{JcaSigner, JcaSignerSettings}
+import com.mohiva.play.silhouette.api.{Environment, EventBus, Silhouette, SilhouetteProvider}
+import com.mohiva.play.silhouette.crypto.{JcaCrypter, JcaCrypterSettings, JcaSigner, JcaSignerSettings}
 import com.mohiva.play.silhouette.impl.authenticators.{CookieAuthenticator, CookieAuthenticatorService, CookieAuthenticatorSettings}
 import com.mohiva.play.silhouette.impl.providers.oauth2.VKProvider
 import com.mohiva.play.silhouette.impl.providers.{DefaultSocialStateHandler, OAuth2Settings}
+import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, PlayCacheLayer, SecureRandomIDGenerator}
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
@@ -21,7 +22,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
   override def configure()= {
+    bind[Silhouette[VkSSOEnv]].to[SilhouetteProvider[VkSSOEnv]]
+    bind[CacheLayer].to[PlayCacheLayer]
+    bind[IDGenerator].toInstance(new SecureRandomIDGenerator())
+    bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
+    bind[EventBus].toInstance(EventBus())
+    bind[Clock].toInstance(Clock())
 
+    bind[Signer].to[JcaSigner] // TODO: remove?
+    bind[AuthenticatorService[CookieAuthenticator]].to[CookieAuthenticatorService]
   }
 
   /** HTTP layer implementation.
@@ -45,6 +54,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     )
   }
 
+  @Provides
   def provideAuthenticatorService(configuration: Configuration,
                                   signer: Signer,
                                   crypter: Crypter,
@@ -77,5 +87,12 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   def provideSigner(configuration: Configuration) = {
     val settings = JcaSignerSettings(configuration.get[String]("silhouette.authenticator.signer.key"))
     new JcaSigner(settings)
+  }
+
+  @Provides
+  def provideCrypter(configuration: Configuration): Crypter = {
+    val config = configuration.underlying.as[JcaCrypterSettings]("silhouette.authenticator.crypter")
+
+    new JcaCrypter(config)
   }
 }

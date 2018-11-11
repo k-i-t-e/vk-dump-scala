@@ -16,7 +16,7 @@ libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.0"
 libraryDependencies += "com.iheart" %% "ficus" % "1.4.3" // config lib, used by Silhouette,
 
 // Silhouette config
-val silhouetteVer = "5.0.6"
+val silhouetteVer = "5.0.0"
 lazy val silhouetteLib = Seq(
   "com.mohiva" %% "play-silhouette" % silhouetteVer,
   "com.mohiva" %% "play-silhouette-password-bcrypt" % silhouetteVer,
