@@ -1,6 +1,6 @@
 package security
 
-import com.google.inject.name.{Named, Names}
+import com.google.inject.name.Named
 import com.google.inject.{AbstractModule, Provides}
 import com.mohiva.play.silhouette.api.crypto.{Crypter, CrypterAuthenticatorEncoder, Signer}
 import com.mohiva.play.silhouette.api.services.AuthenticatorService
@@ -9,14 +9,13 @@ import com.mohiva.play.silhouette.api.{Environment, EventBus, Silhouette, Silhou
 import com.mohiva.play.silhouette.crypto.{JcaCrypter, JcaCrypterSettings, JcaSigner, JcaSignerSettings}
 import com.mohiva.play.silhouette.impl.authenticators.{CookieAuthenticator, CookieAuthenticatorService, CookieAuthenticatorSettings}
 import com.mohiva.play.silhouette.impl.providers.oauth2.VKProvider
-import com.mohiva.play.silhouette.impl.providers.{DefaultSocialStateHandler, OAuth2Settings}
+import com.mohiva.play.silhouette.impl.providers.{DefaultSocialStateHandler, OAuth2Info, OAuth2Settings}
 import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, PlayCacheLayer, SecureRandomIDGenerator}
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
-import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.ws.WSClient
 import play.api.mvc.CookieHeaderEncoding
 
@@ -25,7 +24,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class SilhouetteModule extends AbstractModule with ScalaModule {
   override def configure()= {
     bind[UserDetailsService].to[UserDetailsServiceImpl]
-    bind[DelegableAuthInfoDAO[PasswordInfo]].toInstance(new InMemoryAuthInfoDAO[PasswordInfo])
+    bind[DelegableAuthInfoDAO[OAuth2Info]].toInstance(new InMemoryAuthInfoDAO[OAuth2Info])
 
     bind[Silhouette[VkSSOEnv]].to[SilhouetteProvider[VkSSOEnv]]
     bind[CacheLayer].to[PlayCacheLayer]

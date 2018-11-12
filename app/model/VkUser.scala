@@ -2,4 +2,7 @@ package model
 
 import com.mohiva.play.silhouette.api.Identity
 
-class VkUser(id: Long, firstName: String, lastName: String) extends Identity {}
+case class VkUser(id: Long,
+                  firstName: Option[String],
+                  lastName: Option[String],
+                  accessToken: Option[String]) extends Identity {}
