@@ -43,7 +43,8 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
     }
   }
 
-  private def calculatePageSize(i: Int, realLimit: Int) = Math.min(MAX_ALLOWED_POSTS_COUNT, Math.abs(MAX_ALLOWED_POSTS_COUNT * i - realLimit))
+  private def calculatePageSize(i: Int, realLimit: Int) = Math.min(MAX_ALLOWED_POSTS_COUNT,
+                                                                   Math.abs(MAX_ALLOWED_POSTS_COUNT * i - realLimit))
 
   private def loadImagePortion(groupId: String, userActor: UserActor, pageSize: Int,
                                offset: Int) = {

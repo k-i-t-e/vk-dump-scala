@@ -12,8 +12,10 @@ class UserDetailsServiceImpl @Inject()(userDao: UserDao) extends UserDetailsServ
   override def retrieve(loginInfo: LoginInfo): Future[Option[VkUser]] =
     Future.successful(Some(new VkUser(loginInfo.providerKey.toLong, null, null, None)))
 
-  def save(profile: CommonSocialProfile, accessToken: String)= {
+  override def save(profile: CommonSocialProfile, accessToken: String): Future[VkUser] = {
     val user = VkUser(profile.loginInfo.providerKey.toLong, profile.firstName, profile.lastName, Some(accessToken))
     userDao.save(user)
   }
+
+  override def load(id: Long): Future[VkUser] = userDao.find(id).map(u => u.get)
 }

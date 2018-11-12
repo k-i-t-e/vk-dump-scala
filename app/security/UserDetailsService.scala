@@ -1,6 +1,12 @@
 package security
 
 import com.mohiva.play.silhouette.api.services.IdentityService
+import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
 import model.VkUser
 
-trait UserDetailsService extends IdentityService[VkUser] {}
+import scala.concurrent.Future
+
+trait UserDetailsService extends IdentityService[VkUser] {
+  def save(profile: CommonSocialProfile, accessToken: String): Future[VkUser]
+  def load(id: Long): Future[VkUser]
+}
