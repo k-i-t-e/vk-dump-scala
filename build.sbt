@@ -32,6 +32,9 @@ lazy val silhouetteLib = Seq(
   "com.mohiva" %% "play-silhouette-testkit" % silhouetteVer % "test"
 )
 
+// VK
+libraryDependencies += "com.vk.api" % "sdk" % "0.5.12"
+
 libraryDependencies ++= silhouetteLib
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )  
