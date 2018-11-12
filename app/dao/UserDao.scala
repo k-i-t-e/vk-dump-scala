@@ -17,7 +17,7 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
   private val users = TableQuery[VkUserTable]
 
   def find(id: Long): Future[Option[VkUser]] = db.run {
-    users.filter(u => u.id === id).result.headOption
+    users.filter(_.id === id).result.headOption
   }
 
   def add(authInfo: VkUser): Future[VkUser] =
@@ -40,7 +40,7 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
 
   def save(user: VkUser): Future[VkUser] =
     find(user.id).flatMap {
-      case Some(user) => update(user)
+      case Some(_) => update(user)
       case None => add(user)
     }
 }

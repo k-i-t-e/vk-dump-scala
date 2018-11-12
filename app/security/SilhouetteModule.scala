@@ -87,7 +87,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
       configuration.getOptional[String]("silhouette.vk.scope")
     )
 
-    new VKProvider(httpLayer, new DefaultSocialStateHandler(Set.empty, jcaSigner), settings)
+    new ModernVkProvider(httpLayer, new DefaultSocialStateHandler(Set.empty, jcaSigner), settings)
   }
 
   @Provides @Named("social-state-signer")
