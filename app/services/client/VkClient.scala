@@ -11,6 +11,7 @@ import model.{Image, VkUser}
 import play.Logger
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private val MAX_ALLOWED_POSTS_COUNT = 100
@@ -41,6 +42,21 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
       imagesPortion ++ (1 until Math.ceil(realLimit.toDouble / MAX_ALLOWED_POSTS_COUNT).toInt)
         .flatMap(i => loadImagePortion(groupId, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
     }
+  }
+
+  def loadImagesFromBottom(groupId: String, offset: Option[Int] = None): (Seq[Image], Int) = {
+    val userActor = new UserActor(user.id.toInt, user.accessToken.get)
+    val realOffset = offset match {
+      case Some(o) => o
+      case None => {
+        val (_, totalCount, _) = loadImagePortion(groupId, userActor, 1, 0)
+        totalCount - MAX_ALLOWED_POSTS_COUNT
+      }
+    }
+
+    val pageSize = if (realOffset >= 0) MAX_ALLOWED_POSTS_COUNT else -realOffset
+    val (imagesPortion, _, _) = loadImagePortion(groupId, userActor, pageSize, Math.max(realOffset, 0))
+    (imagesPortion, Math.max(realOffset, 0))
   }
 
   private def calculatePageSize(i: Int, realLimit: Int) = Math.min(MAX_ALLOWED_POSTS_COUNT,
