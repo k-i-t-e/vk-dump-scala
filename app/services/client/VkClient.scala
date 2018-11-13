@@ -28,17 +28,17 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
 
   def loadImages(groupId: String, offset: Int, limit: Option[Int] = None): Seq[Image] = {
     val userActor = new UserActor(user.id.toInt, user.accessToken.get)
-    val (imagesPortion, totalCount) = loadImagePortion(groupId, userActor,
+    val (imagesPortion, totalCount, postsCount) = loadImagePortion(groupId, userActor,
                                  Math.min(MAX_ALLOWED_POSTS_COUNT, limit.getOrElse(MAX_ALLOWED_POSTS_COUNT)), offset)
     val realLimit = limit match {
       case Some(l) => l
       case None => totalCount
     }
 
-    if (realLimit <= imagesPortion.size) {
+    if (realLimit <= postsCount) {
       imagesPortion
     } else {
-      imagesPortion ++ (1 to Math.ceil(realLimit / MAX_ALLOWED_POSTS_COUNT).toInt)
+      imagesPortion ++ (1 until Math.ceil(realLimit.toDouble / MAX_ALLOWED_POSTS_COUNT).toInt)
         .flatMap(i => loadImagePortion(groupId, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
     }
   }
@@ -49,7 +49,7 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private def loadImagePortion(groupId: String, userActor: UserActor, pageSize: Int,
                                offset: Int) = {
     doRequest {
-      Logger.debug("Loading wall posts portion of size {}, offset {}", pageSize, offset)
+      Logger.debug(s"Loading wall posts portion of size $pageSize, offset $offset")
 
       val postsResult = client.wall
         .get(userActor)
@@ -66,12 +66,12 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
               a.getPhoto.getPhoto807, a.getPhoto.getPhoto1280, a.getPhoto.getPhoto2560)
       }
 
-      (images, postsResult.getCount.toInt)
+      (images, postsResult.getCount.toInt, postsResult.getItems.size)
     }
   }
 
   private def doRequest[R](requestFunction: => R): R = {
     requestSemaphore.acquire()
-    requestFunction()
+    requestFunction
   }
 }
