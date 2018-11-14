@@ -19,7 +19,10 @@ class DumpService @Inject()(actorSystem: ActorSystem,
 
   def loadImages(userId: Long, groupId: String, count: Int): Future[Seq[Image]] = { // TODO: test method, remove
     val client = getClient(userId)
-    client.map(_.loadImages(groupId, 0, Some(count)))
+    client.map({
+       userDetailsService.updateLastAccessed(userId)
+       _.loadImages(groupId, 0, Some(count))
+     })
   }
 
   def fetchAllImages(groupId: String, userId: Long): Future[Seq[Image]] = {

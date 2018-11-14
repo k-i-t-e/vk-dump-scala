@@ -1,7 +1,9 @@
 package dao
 
+import java.time.{Clock, LocalDateTime}
+
 import com.google.inject.Singleton
-import dao.table.VkUserTable
+import dao.table.{GroupTable, VkUserTable}
 import javax.inject.Inject
 import model.VkUser
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -13,8 +15,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[PostgresProfile] { // extends DelegableAuthInfoDAO[OAuth2Info]
   import profile.api._
+  import dao.table.VkUserTable._
 
   private val users = TableQuery[VkUserTable]
+  private val groups = TableQuery[GroupTable]
 
   def find(id: Long): Future[Option[VkUser]] = db.run {
     users.filter(_.id === id).result.headOption
@@ -37,6 +41,21 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
     } map {
       _ => authInfo
     }
+
+  /*def findUsersWithGroup(domain: String): Seq[VkUser] = {
+
+
+  }*/
+
+  def updateLastAccess(userId: Long): Future[_] = {
+    db.run {
+       val query = for {
+         existingUser <- users if existingUser.id === userId
+       } yield existingUser.lastAccessed
+
+       query.update(LocalDateTime.now(Clock.systemUTC())).transactionally
+    }
+  }
 
   def save(user: VkUser): Future[VkUser] =
     find(user.id).flatMap {

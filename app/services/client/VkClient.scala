@@ -11,7 +11,6 @@ import model.{Image, VkUser}
 import play.Logger
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private val MAX_ALLOWED_POSTS_COUNT = 100
@@ -88,6 +87,6 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
 
   private def doRequest[R](requestFunction: => R): R = {
     requestSemaphore.acquire()
-    requestFunction
+    requestFunction()
   }
 }
