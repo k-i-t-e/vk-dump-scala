@@ -21,4 +21,6 @@ class UserDetailsServiceImpl @Inject()(userDao: UserDao)(implicit ec: ExecutionC
   override def load(id: Long): Future[VkUser] = userDao.find(id).map(u => u.get)
 
   override def updateLastAccessed(userId: Long): Future[_] = userDao.updateLastAccess(userId)
+
+  override def findUsersWithGroup(groupId: String): Future[Seq[VkUser]] = userDao.findUsersWithGroup(groupId)
 }

@@ -1,13 +1,16 @@
 package services.client
 
+import java.util
 import java.util.concurrent.Semaphore
-import java.util.{Timer, TimerTask}
+import java.util.{List, Timer, TimerTask}
 
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.UserActor
+import com.vk.api.sdk.exceptions.{ApiException, ClientException}
 import com.vk.api.sdk.httpclient.HttpTransportClient
+import com.vk.api.sdk.objects.groups.GroupFull
 import com.vk.api.sdk.objects.wall.WallpostAttachmentType
-import model.{Image, VkUser}
+import model.{Group, Image, VkUser}
 import play.Logger
 
 import scala.collection.JavaConverters._
@@ -56,6 +59,16 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
     val pageSize = if (realOffset >= 0) MAX_ALLOWED_POSTS_COUNT else -realOffset
     val (imagesPortion, _, _) = loadImagePortion(groupId, userActor, pageSize, Math.max(realOffset, 0))
     (imagesPortion, Math.max(realOffset, 0))
+  }
+
+  def loadGroup(groupId: String): Option[Group] = {
+    doRequest {
+      val userActor = new UserActor(user.id.toInt, user.accessToken.get)
+      val groups = client.groups.getById(userActor).groupId(groupId).execute.asScala
+      groups.headOption.map((vkGroup: GroupFull) =>
+          Group(vkGroup.getId.longValue, vkGroup.getScreenName, vkGroup.getName, vkGroup.getName, false, None)
+      )
+    }
   }
 
   private def calculatePageSize(i: Int, realLimit: Int) = Math.min(MAX_ALLOWED_POSTS_COUNT,

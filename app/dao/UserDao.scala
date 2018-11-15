@@ -19,6 +19,7 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
 
   private val users = TableQuery[VkUserTable]
   private val groups = TableQuery[GroupTable]
+  private val userGroups = TableQuery[(Long, Long)]
 
   def find(id: Long): Future[Option[VkUser]] = db.run {
     users.filter(_.id === id).result.headOption
@@ -42,10 +43,15 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
       _ => authInfo
     }
 
-  /*def findUsersWithGroup(domain: String): Seq[VkUser] = {
+  def findUsersWithGroup(domain: String): Future[Seq[VkUser]] = {
+    val query = for {
+      g <- groups filter(_.domain === domain)
+      ug <- userGroups if g.id === ug._2
+      u <- users if u.id === ug._1
+    } yield u
 
-
-  }*/
+    db.run(query.sortBy(_.lastAccessed.desc).result)
+  }
 
   def updateLastAccess(userId: Long): Future[_] = {
     db.run {

@@ -17,12 +17,14 @@ class DumpService @Inject()(actorSystem: ActorSystem,
                             userDetailsService: UserDetailsService)(implicit ec: ExecutionContext) {
   private val clientMap = new ConcurrentHashMap[Long, VkClient]()
 
-  def loadImages(userId: Long, groupId: String, count: Int): Future[Seq[Image]] = { // TODO: test method, remove
-    val client = getClient(userId)
-    client.map({
-       userDetailsService.updateLastAccessed(userId)
-       _.loadImages(groupId, 0, Some(count))
-     })
+  def loadImages(groupId: String, count: Int): Future[Seq[Image]] = { // TODO: test method, remove
+    for {
+      user <- userDetailsService.findUsersWithGroup(groupId)
+      client <- getClient(user.head.id) if user.nonEmpty
+    } yield {
+      userDetailsService.updateLastAccessed(user.head.id)
+      client.loadImages(groupId, 0, Some(count))
+    }
   }
 
   def fetchAllImages(groupId: String, userId: Long): Future[Seq[Image]] = {

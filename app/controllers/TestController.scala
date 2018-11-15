@@ -12,7 +12,7 @@ class TestController @Inject()(cc: ControllerComponents,
                                dumpService: DumpService)(implicit ec: ExecutionContext) extends AbstractController(cc){
   implicit val imageWrites = Json.writes[Image]
 
-  def testGetImages(userId: Long, groupId: String, count: Int) = Action.async {
-    _ => dumpService.loadImages(userId, groupId, count).map(images => Ok(Json.toJson(images)))
+  def testGetImages(groupId: String, count: Int) = Action.async {
+    _ => dumpService.loadImages(groupId, count).map(images => Ok(Json.toJson(images)))
   }
 }
