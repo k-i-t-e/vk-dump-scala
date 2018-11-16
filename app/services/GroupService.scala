@@ -24,7 +24,7 @@ class GroupService @Inject()(groupDao: GroupDao, vkClient: VkClient)(implicit ec
     groupOpt match {
       case Some(group) =>
         val withNewAlias = group.withAlias(groupRequest.alias.getOrElse(group.alias))
-        groupDao.updateGroup(withNewAlias, groupRequest.userIds)
+        groupDao.updateGroup(withNewAlias, groupRequest.userIds).map(_ => withNewAlias)
       case _ => vkClient.loadGroup(groupId) match {
           case Some(group) =>
             val withNewAlias = group.withAlias(groupRequest.alias.getOrElse(group.alias))
