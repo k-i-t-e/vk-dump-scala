@@ -27,7 +27,10 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
       u <- users if u.id === gu.userId
     } yield (g, u)
 
-    db.run(query.result).map(_.foldLeft(Map[Group, Seq[VkUser]]())((acc, pair) => acc()))
+    db.run(query.result)
+      .map(
+        _.groupBy(_._1).map(p => p._1 -> p._2.map(_._2)).foldLeft(Seq[Group]())((acc, pair) => acc :+ pair._1.withUsers(Some(pair._2)))
+      )
   }
 
   def updateGroup(group: Group, userIds: Seq[Long]): Future[_] = {
