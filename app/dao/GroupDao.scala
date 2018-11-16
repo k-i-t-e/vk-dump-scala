@@ -29,7 +29,9 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
 
     db.run(query.result)
       .map(
-        _.groupBy(_._1).map(p => p._1 -> p._2.map(_._2)).foldLeft(Seq[Group]())((acc, pair) => acc :+ pair._1.withUsers(Some(pair._2)))
+        _.groupBy(_._1)
+          .map(p => p._1 -> p._2.map(_._2))
+          .foldLeft(Seq[Group]()){ (acc, pair) => acc :+ pair._1.withUsers(Some(pair._2)) }
       )
   }
 
