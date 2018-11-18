@@ -28,4 +28,8 @@ class ConfigurationController @Inject()(cc: ControllerComponents, groupService: 
   def addGroupUsers(groupId: Long, userIds: Seq[Long]) = Action.async {
     _ => groupService.addGroupUsers(groupId, userIds).map(g => Ok(Json.toJson(g)))
   }
+
+  def loadGroups() = Action.async {
+    _ => groupService.loadGroups.map(g => Ok(Json.toJson(g)))
+  }
 }

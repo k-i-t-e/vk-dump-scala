@@ -8,7 +8,8 @@ GET     /                           controllers.HomeController.index
 
 GET         /login          controllers.SignInController.login
 
-POST    /config/group   controllers.ConfigurationController.registerGroup()
+GET     /config/group   controllers.ConfigurationController.loadGroups
+POST    /config/group   controllers.ConfigurationController.registerGroup
 PUT    /config/group/:groupId/users   controllers.ConfigurationController.addGroupUsers(groupId: Long, userIds: Seq[Long])
 
 GET     /images/:groupId    controllers.TestController.testGetImages(groupId: String, count: Int)

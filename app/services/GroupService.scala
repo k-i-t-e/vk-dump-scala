@@ -9,6 +9,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GroupService @Inject()(groupDao: GroupDao, dumpService: DumpService)(implicit ec: ExecutionContext) {
+  def loadGroups: Future[Seq[Group]] = groupDao.findAllWithUsers()
+
   def registerGroup(groupRequest: GroupRequest): Future[Group] = {
     groupRequest.domain match {
       case Some(d) => groupDao.findByDomain(d).flatMap(group => saveGroup(group, groupRequest, d))
