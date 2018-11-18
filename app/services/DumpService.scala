@@ -42,7 +42,7 @@ class DumpService @Inject()(actorSystem: ActorSystem,
     getClient(userId).map(c => _fetchAll(Seq.empty, c, None))
   }
 
-  private def getClient(userId: Long) = {
+  def getClient(userId: Long): Future[VkClient] = {
     Option(clientMap.get(userId)).fold(userDetailsService.load(userId).map(u => {
       val c = new VkClient(u, 60000, 5)
       clientMap.put(userId, c)

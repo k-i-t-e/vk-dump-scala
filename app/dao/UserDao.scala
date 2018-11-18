@@ -3,7 +3,7 @@ package dao
 import java.time.{Clock, LocalDateTime}
 
 import com.google.inject.Singleton
-import dao.table.{GroupTable, VkUserTable}
+import dao.table.{GroupTable, UserGroupTable, VkUserTable}
 import javax.inject.Inject
 import model.VkUser
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -19,7 +19,7 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
 
   private val users = TableQuery[VkUserTable]
   private val groups = TableQuery[GroupTable]
-  private val userGroups = TableQuery[(Long, Long)]
+  private val userGroups = TableQuery[UserGroupTable]
 
   def find(id: Long): Future[Option[VkUser]] = db.run {
     users.filter(_.id === id).result.headOption
@@ -46,8 +46,8 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
   def findUsersWithGroup(domain: String): Future[Seq[VkUser]] = {
     val query = for {
       g <- groups filter(_.domain === domain)
-      ug <- userGroups if g.id === ug._2
-      u <- users if u.id === ug._1
+      ug <- userGroups if g.id === ug.groupId
+      u <- users if u.id === ug.userId
     } yield u
 
     db.run(query.sortBy(_.lastAccessed.desc).result)

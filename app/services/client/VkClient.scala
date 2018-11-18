@@ -100,6 +100,6 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
 
   private def doRequest[R](requestFunction: => R): R = {
     requestSemaphore.acquire()
-    requestFunction()
+    requestFunction
   }
 }

@@ -8,7 +8,10 @@ GET     /                           controllers.HomeController.index
 
 GET         /login          controllers.SignInController.login
 
-GET     /images/:groupId    controllers.TestController.testGetImages(userId: Long, groupId: String, count: Int)
+POST    /config/group   controllers.ConfigurationController.registerGroup()
+PUT    /config/group/:groupId/users   controllers.ConfigurationController.addGroupUsers(groupId: Long, userIds: Seq[Long])
+
+GET     /images/:groupId    controllers.TestController.testGetImages(groupId: String, count: Int)
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 

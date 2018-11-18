@@ -35,6 +35,22 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
       )
   }
 
+  def findWithUsers(groupId: Long): Future[Option[Group]] = {
+    val query = for {
+      g <- groups if g.id === groupId
+      gu <- groupUsers if gu.groupId === g.id
+      u <- users if u.id === gu.userId
+    } yield (g, u)
+
+    db.run(query.result.headOption)
+      .map(
+        _.groupBy(_._1)
+          .map(p => p._1 -> p._2.map(_._2))
+          .foldLeft(Seq[Group]()){ (acc, pair) => acc :+ pair._1.withUsers(Some(pair._2.toSeq)) }
+          .headOption
+      )
+  }
+
   def updateGroup(group: Group, userIds: Seq[Long]): Future[_] = {
     val action1 = groupUsers.filter(_.groupId === group.id).delete
     val action2 = groupUsers ++= userIds.map(userId => (userId, group.id))
@@ -50,7 +66,7 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     db.run(sequence.transactionally)
   }
 
-  def addGroupUsers(groupId: Long, userIds: Seq[Long]):Future[_] = {
+  def addGroupUsers(groupId: Long, userIds: Iterable[Long]):Future[_] = {
     if (userIds.isEmpty) {
       Future.successful()
     } else {
@@ -60,7 +76,7 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
 
   def removeGroupUsers(groupId: Long, userIds: Seq[Long]):Future[_] = {
     if (userIds.isEmpty) {
-      Future.successful()
+      Future.successful(None)
     } else {
       db.run(groupUsers.filter(ug => ug.groupId === groupId && (ug.userId inSet userIds)).delete)
     }

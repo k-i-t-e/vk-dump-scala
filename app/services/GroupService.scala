@@ -4,12 +4,11 @@ import com.google.inject.{Inject, Singleton}
 import controllers.vo.GroupRequest
 import dao.GroupDao
 import model.Group
-import services.client.VkClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GroupService @Inject()(groupDao: GroupDao, vkClient: VkClient)(implicit ec: ExecutionContext) {
+class GroupService @Inject()(groupDao: GroupDao, dumpService: DumpService)(implicit ec: ExecutionContext) {
   def registerGroup(groupRequest: GroupRequest): Future[Group] = {
     groupRequest.domain match {
       case Some(d) => groupDao.findByDomain(d).flatMap(group => saveGroup(group, groupRequest, d))
@@ -25,12 +24,45 @@ class GroupService @Inject()(groupDao: GroupDao, vkClient: VkClient)(implicit ec
       case Some(group) =>
         val withNewAlias = group.withAlias(groupRequest.alias.getOrElse(group.alias))
         groupDao.updateGroup(withNewAlias, groupRequest.userIds).map(_ => withNewAlias)
-      case _ => vkClient.loadGroup(groupId) match {
+      case _ =>
+        val client = groupRequest.userIds.headOption match {
+          case Some(userId) => dumpService.getClient(userId)
+          case None => throw new IllegalArgumentException(s"Group should contain at least one authorized user")
+        }
+
+        client.flatMap(_.loadGroup(groupId) match {
           case Some(group) =>
             val withNewAlias = group.withAlias(groupRequest.alias.getOrElse(group.alias))
             groupDao.insertGroup(withNewAlias, groupRequest.userIds).map(_ => withNewAlias)
           case _ => throw new IllegalArgumentException(s"Group with id '$groupId' not found")
-        }
+        })
+    }
+  }
+
+  def addGroupUsers(groupId: Long, userIds: Seq[Long]): Future[Group] = {
+    /*groupDao.findWithUsers(groupId).flatMap {
+      case Some(group) =>
+        val existingUserIds = group.users.getOrElse(Seq.empty).toStream.map(_.id).toSet
+        val newIds = userIds.toSet.diff(existingUserIds)
+        groupDao.addGroupUsers(groupId, newIds)
+          .flatMap(_ => groupDao.findWithUsers(groupId).map(opt => opt.get))
+
+      case None => throw new IllegalArgumentException(s"Group with id '$groupId' not found")
+    }*/
+
+    val updatedGroup = for {
+      Some(group) <- groupDao.findWithUsers(groupId)
+      existingUserIds = group.users.getOrElse(Seq.empty).toStream.map(_.id).toSet
+      newIds = userIds.toSet.diff(existingUserIds)
+      _ = groupDao.addGroupUsers(groupId, newIds)
+      result <- groupDao.findWithUsers(groupId)
+    } yield {
+      result
+    }
+
+    updatedGroup.map {
+      case Some(group) => group
+      case None => throw new IllegalArgumentException(s"Group with id '$groupId' not found")
     }
   }
 }

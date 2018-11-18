@@ -10,7 +10,7 @@ CREATE TABLE vk_group(
   name VARCHAR(1024) NOT NULL,
   alias VARCHAR(1024) NOT NULL,
   fetched BOOLEAN DEFAULT FALSE,
-  offset INTEGER
+  fetched_offset INTEGER
 );
 
 CREATE TABLE vk_user_group(
