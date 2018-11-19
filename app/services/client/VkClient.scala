@@ -57,7 +57,7 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
 
     val pageSize = if (realOffset >= 0) MAX_ALLOWED_POSTS_COUNT else -realOffset
     val (imagesPortion, _, _) = loadImagePortion(group, userActor, pageSize, Math.max(realOffset, 0))
-    (imagesPortion, Math.max(realOffset, 0))
+    (imagesPortion, Math.max(realOffset - pageSize, 0))
   }
 
   def loadImagesTillPost(group: Group, postId: Long): Seq[Image] = {
@@ -93,7 +93,7 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private def loadImagePortion(group: Group, userActor: UserActor, pageSize: Int,
                                offset: Int) = {
     doRequest {
-      Logger.debug(s"Loading wall posts portion of size $pageSize, offset $offset")
+      Logger.debug(s"Loading '${group.domain}' wall posts portion of size $pageSize, offset $offset")
 
       val postsResult = client.wall
         .get(userActor)
