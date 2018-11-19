@@ -42,31 +42,35 @@ class DumpService @Inject()(actorSystem: ActorSystem,
 
       groupService.loadGroups.map(groups => for (group <- groups) yield {
         userDetailsService.findUsersWithGroup(group.id).map(_.headOption).withFilter(_.isDefined).map(user => {
-          //if (!group.fetched) {
-            fetchAllImages(group, user.get, group.offset)
-          //} else {
-
-          //}
-        })
+            if (!group.fetched) {
+              fetchAllImages(group, user.get, group.offset)
+            } else {
+              imageDao.getLastImage(group.id).map {
+                case Some(image) =>
+                  val images = vkClientService.getClient(user.get).loadImagesTillPost(group, image.postId)
+                  imageDao.insertImages(images)
+                case None => fetchAllImages(group, user.get, group.offset)
+              }
+            }
+          }
+        )
       })
     }
   }
 
-  private def fetchAllImages(group: Group, user: VkUser, initialOffset: Option[Int]): Seq[Image] = {
-    def _fetchAll(images: Seq[Image], client: VkClient, offset: Option[Int]): Seq[Image] = {
+  private def fetchAllImages(group: Group, user: VkUser, initialOffset: Option[Int]): Unit = {
+    def _fetchAll(client: VkClient, offset: Option[Int]): Unit = {
       offset match {
         case Some(0) =>
           groupService.updateGroup(group.withOffset(None).withFetched(false))
-          images
         case _ =>
           val (i, o) = client.loadImagesFromBottom(group, offset)
           imageDao.insertImages(i)
           groupService.updateGroup(group.withOffset(Some(o)))
-          val newImages = images ++ i
-          _fetchAll(newImages, client, Some(o))
+          _fetchAll(client, Some(o))
       }
     }
 
-    _fetchAll(Seq.empty, vkClientService.getClient(user), initialOffset)
+    _fetchAll(vkClientService.getClient(user), initialOffset)
   }
 }

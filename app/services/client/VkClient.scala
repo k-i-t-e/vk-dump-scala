@@ -60,6 +60,23 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
     (imagesPortion, Math.max(realOffset, 0))
   }
 
+  def loadImagesTillPost(group: Group, postId: Long): Seq[Image] = {
+    val userActor = new UserActor(user.id.toInt, user.accessToken.get)
+
+    def _loadImages(images: Seq[Image], offset: Int): Seq[Image] = {
+      val (i, _, newOffset) = loadImagePortion(group, userActor, MAX_ALLOWED_POSTS_COUNT, offset)
+      val index = i.indexWhere(_.postId == postId.toInt)
+      if (index >= 0) {
+        images ++ i.take(index)
+      } else {
+        _loadImages(images ++ i, newOffset)
+      }
+    }
+
+
+    _loadImages(Seq.empty, 0)
+  }
+
   def loadGroup(groupId: String): Option[Group] = {
     doRequest {
       val userActor = new UserActor(user.id.toInt, user.accessToken.get)
