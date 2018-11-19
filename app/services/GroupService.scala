@@ -8,8 +8,10 @@ import model.Group
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GroupService @Inject()(groupDao: GroupDao, dumpService: DumpService)(implicit ec: ExecutionContext) {
-  def loadGroups: Future[Seq[Group]] = groupDao.findAllWithUsers()
+class GroupService @Inject()(groupDao: GroupDao, vkClientService: VkClientService)(implicit ec: ExecutionContext) {
+  def loadGroupsWithUsers: Future[Seq[Group]] = groupDao.findAllWithUsers()
+  def loadGroups: Future[Seq[Group]] = groupDao.findAll()
+  def loadGroup(domain: String): Future[Option[Group]] = groupDao.findByDomain(domain)
 
   def registerGroup(groupRequest: GroupRequest): Future[Group] = {
     groupRequest.domain match {
@@ -28,7 +30,7 @@ class GroupService @Inject()(groupDao: GroupDao, dumpService: DumpService)(impli
         groupDao.updateGroup(withNewAlias, groupRequest.userIds).map(_ => withNewAlias)
       case _ =>
         val client = groupRequest.userIds.headOption match {
-          case Some(userId) => dumpService.getClient(userId)
+          case Some(userId) => vkClientService.getClient(userId)
           case None => throw new IllegalArgumentException(s"Group should contain at least one authorized user")
         }
 
@@ -67,4 +69,6 @@ class GroupService @Inject()(groupDao: GroupDao, dumpService: DumpService)(impli
       case None => throw new IllegalArgumentException(s"Group with id '$groupId' not found")
     }
   }
+
+  def updateGroup(group: Group): Future[_] = groupDao.updateGroup(group)
 }

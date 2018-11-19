@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[PostgresProfile] { // extends DelegableAuthInfoDAO[OAuth2Info]
   import profile.api._
-  import dao.table.VkUserTable._
+  import dao.table.Converters._
 
   private val users = TableQuery[VkUserTable]
   private val groups = TableQuery[GroupTable]
@@ -47,6 +47,15 @@ class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(
     val query = for {
       g <- groups filter(_.domain === domain)
       ug <- userGroups if g.id === ug.groupId
+      u <- users if u.id === ug.userId
+    } yield u
+
+    db.run(query.sortBy(_.lastAccessed.desc).result)
+  }
+
+  def findUsersWithGroup(id: Long): Future[Seq[VkUser]] = {
+    val query = for {
+      ug <- userGroups if ug.groupId === id
       u <- users if u.id === ug.userId
     } yield u
 

@@ -30,6 +30,6 @@ class ConfigurationController @Inject()(cc: ControllerComponents, groupService: 
   }
 
   def loadGroups() = Action.async {
-    _ => groupService.loadGroups.map(g => Ok(Json.toJson(g)))
+    _ => groupService.loadGroupsWithUsers.map(g => Ok(Json.toJson(g)))
   }
 }

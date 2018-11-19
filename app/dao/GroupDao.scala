@@ -1,8 +1,9 @@
 package dao
 
 import com.google.inject.{Inject, Singleton}
+import com.sun.scenario.effect.Offset
 import dao.table.{GroupTable, UserGroupTable, VkUserTable}
-import model.{Group, VkUser}
+import model.Group
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.PostgresProfile
 
@@ -19,7 +20,8 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
 
   def findById(groupId: Long): Future[Option[Group]] = db.run(groups.filter(_.id === groupId).result.headOption)
   def findByDomain(domain: String): Future[Option[Group]] = db.run(groups.filter(_.domain === domain).result.headOption)
-
+  def findAll(): Future[Seq[Group]] = db.run(groups.result)
+  
   def findAllWithUsers(): Future[Seq[Group]] = {
     val query = for {
       g <- groups
@@ -57,6 +59,10 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
     val action3 = groups.filter(_.id === group.id).update(group)
 
     db.run((action1 andThen action2 andThen action3).transactionally)
+  }
+
+  def updateGroup(group: Group): Future[_] = {
+    db.run(groups.filter(_.id === group.id).update(group).transactionally)
   }
 
   def insertGroup(group: Group, userIds: Seq[Long]): Future[_] = {

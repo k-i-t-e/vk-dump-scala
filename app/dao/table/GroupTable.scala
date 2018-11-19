@@ -5,7 +5,7 @@ import slick.jdbc.PostgresProfile.api._
 import slick.lifted.Tag
 
 class GroupTable(tag:Tag) extends Table[Group](tag, "vk_group"){
-  def id = column[Long]("id")
+  def id = column[Long]("id", O.PrimaryKey)
   def name = column[String]("name")
   def alias = column[String]("alias")
   def offset = column[Int]("fetched_offset")

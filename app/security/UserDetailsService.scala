@@ -11,4 +11,5 @@ trait UserDetailsService extends IdentityService[VkUser] {
   def updateLastAccessed(userId: Long): Future[_]
   def load(id: Long): Future[VkUser]
   def findUsersWithGroup(groupId: String): Future[Seq[VkUser]]
+  def findUsersWithGroup(groupId: Long): Future[Seq[VkUser]]
 }

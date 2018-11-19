@@ -1,14 +1,14 @@
 package services.client
 
-import java.util
+import java.time.{Instant, ZoneId}
 import java.util.concurrent.Semaphore
-import java.util.{List, Timer, TimerTask}
+import java.util.{Timer, TimerTask}
 
 import com.vk.api.sdk.client.VkApiClient
 import com.vk.api.sdk.client.actors.UserActor
-import com.vk.api.sdk.exceptions.{ApiException, ClientException}
 import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.groups.GroupFull
+import com.vk.api.sdk.objects.photos.Photo
 import com.vk.api.sdk.objects.wall.WallpostAttachmentType
 import model.{Group, Image, VkUser}
 import play.Logger
@@ -29,9 +29,9 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
     }
   }, 0, refreshPeriod)
 
-  def loadImages(groupId: String, offset: Int, limit: Option[Int] = None): Seq[Image] = {
+  def loadImages(group: Group, offset: Int, limit: Option[Int] = None): Seq[Image] = {
     val userActor = new UserActor(user.id.toInt, user.accessToken.get)
-    val (imagesPortion, totalCount, postsCount) = loadImagePortion(groupId, userActor,
+    val (imagesPortion, totalCount, postsCount) = loadImagePortion(group, userActor,
                                  Math.min(MAX_ALLOWED_POSTS_COUNT, limit.getOrElse(MAX_ALLOWED_POSTS_COUNT)), offset)
     val realLimit = limit match {
       case Some(l) => l
@@ -42,22 +42,21 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
       imagesPortion
     } else {
       imagesPortion ++ (1 until Math.ceil(realLimit.toDouble / MAX_ALLOWED_POSTS_COUNT).toInt)
-        .flatMap(i => loadImagePortion(groupId, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
+        .flatMap(i => loadImagePortion(group, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
     }
   }
 
-  def loadImagesFromBottom(groupId: String, offset: Option[Int] = None): (Seq[Image], Int) = {
+  def loadImagesFromBottom(group: Group, offset: Option[Int] = None): (Seq[Image], Int) = {
     val userActor = new UserActor(user.id.toInt, user.accessToken.get)
     val realOffset = offset match {
       case Some(o) => o
-      case None => {
-        val (_, totalCount, _) = loadImagePortion(groupId, userActor, 1, 0)
+      case None =>
+        val (_, totalCount, _) = loadImagePortion(group, userActor, 1, 0)
         totalCount - MAX_ALLOWED_POSTS_COUNT
-      }
     }
 
     val pageSize = if (realOffset >= 0) MAX_ALLOWED_POSTS_COUNT else -realOffset
-    val (imagesPortion, _, _) = loadImagePortion(groupId, userActor, pageSize, Math.max(realOffset, 0))
+    val (imagesPortion, _, _) = loadImagePortion(group, userActor, pageSize, Math.max(realOffset, 0))
     (imagesPortion, Math.max(realOffset, 0))
   }
 
@@ -74,14 +73,14 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private def calculatePageSize(i: Int, realLimit: Int) = Math.min(MAX_ALLOWED_POSTS_COUNT,
                                                                    Math.abs(MAX_ALLOWED_POSTS_COUNT * i - realLimit))
 
-  private def loadImagePortion(groupId: String, userActor: UserActor, pageSize: Int,
+  private def loadImagePortion(group: Group, userActor: UserActor, pageSize: Int,
                                offset: Int) = {
     doRequest {
       Logger.debug(s"Loading wall posts portion of size $pageSize, offset $offset")
 
       val postsResult = client.wall
         .get(userActor)
-        .domain(groupId)
+        .domain(group.domain)
         .count(pageSize)
         .offset(offset)
         .execute
@@ -90,13 +89,25 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
         p <- postsResult.getItems.asScala if p.getAttachments != null
         a <- p.getAttachments.asScala if a.getType == WallpostAttachmentType.PHOTO
       } yield {
-        Image(p.getId.toLong, a.getPhoto.getPhoto75, a.getPhoto.getPhoto130, a.getPhoto.getPhoto604,
-              a.getPhoto.getPhoto807, a.getPhoto.getPhoto1280, a.getPhoto.getPhoto2560)
+        Image(p.getId.toLong,
+              Map(
+                75 -> a.getPhoto.getPhoto75,
+                130 -> a.getPhoto.getPhoto130,
+                604 -> a.getPhoto.getPhoto604,
+                807 -> a.getPhoto.getPhoto807,
+                1280 -> a.getPhoto.getPhoto1280,
+                2560 -> a.getPhoto.getPhoto2560
+              ), getThumbnail(a.getPhoto),
+              Instant.ofEpochSecond(p.getDate.toLong).atZone(ZoneId.of("UTC")).toLocalDateTime,
+              group.id,
+              None)
       }
 
       (images, postsResult.getCount.toInt, postsResult.getItems.size)
     }
   }
+
+  private def getThumbnail(photo: Photo) = photo.getPhoto604
 
   private def doRequest[R](requestFunction: => R): R = {
     requestSemaphore.acquire()
