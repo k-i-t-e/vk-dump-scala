@@ -74,7 +74,7 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
 
   def addGroupUsers(groupId: Long, userIds: Iterable[Long]):Future[_] = {
     if (userIds.isEmpty) {
-      Future.successful()
+      Future.successful(None)
     } else {
       db.run(groupUsers ++= userIds.map((_, groupId)))
     }

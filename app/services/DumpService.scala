@@ -59,7 +59,7 @@ class DumpService @Inject()(actorSystem: ActorSystem,
     _fetchAll(vkClientService.getClient(user), initialOffset)
   }
 
-  def loadImages(groupId: String, count: Int): Future[Seq[Image]] = { // TODO: test method, remove
+  def loadImages(groupId: String, count: Int, offset: Int): Future[Seq[Image]] = { // TODO: test method, remove
     groupService.loadGroup(groupId).flatMap {
       case Some(group) =>
         for {
@@ -67,7 +67,7 @@ class DumpService @Inject()(actorSystem: ActorSystem,
           client <- vkClientService.getClient(user.head.id) if user.nonEmpty
         } yield {
           userDetailsService.updateLastAccessed(user.head.id)
-          client.loadImages(group, 0, Some(count))
+          client.loadImages(group, offset, Some(count))
         }
       case None => throw new IllegalArgumentException(s"No group with ID '$groupId' found")
     }

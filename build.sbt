@@ -18,7 +18,7 @@ libraryDependencies += "com.iheart" %% "ficus" % "1.4.3" // config lib, used by 
 // Database
 libraryDependencies += "org.postgresql" % "postgresql" % "42.1.1"
 libraryDependencies ++= Seq(
-  "com.h2database" % "h2" % "1.4.196",
+  "com.h2database" % "h2" % "1.4.196" % Test,
   "com.typesafe.play" %% "play-slick" % "3.0.3",
   "com.typesafe.play" %% "play-slick-evolutions" % "3.0.3")
 

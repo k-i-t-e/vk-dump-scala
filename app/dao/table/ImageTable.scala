@@ -14,7 +14,7 @@ class ImageTable(tag: Tag) extends Table[Image](tag, "image") {
   def urls = column[Map[Int, String]]("urls")
   def thumbnail = column[String]("thumbnail")
   def postId  = column[Long]("post_id")
-  def createdDate = column[LocalDateTime]("createdDate")
+  def createdDate = column[LocalDateTime]("created_date")
 
   override def * = (postId, urls, thumbnail, createdDate, groupId, id.?) <> (Image.tupled, Image.unapply)
 }

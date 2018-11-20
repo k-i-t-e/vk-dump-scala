@@ -7,8 +7,8 @@ import slick.jdbc.PostgresProfile.api._
 
 object Converters {
   implicit val localDateTimeType: BaseColumnType[LocalDateTime] = MappedColumnType.base[LocalDateTime, Timestamp](
-    dataTime => new Timestamp(dataTime.toInstant(ZoneOffset.of("UTC")).toEpochMilli),
-    timestamp => LocalDateTime.ofInstant(timestamp.toInstant, ZoneOffset.of("UTC"))
+    dataTime => new Timestamp(dataTime.toInstant(ZoneOffset.UTC).toEpochMilli),
+    timestamp => LocalDateTime.ofInstant(timestamp.toInstant, ZoneOffset.UTC)
   )
 
   implicit val urlsType: BaseColumnType[Map[Int, String]] = MappedColumnType.base[Map[Int, String], String](
