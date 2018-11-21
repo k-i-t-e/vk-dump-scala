@@ -7,13 +7,13 @@ import dao.table.{GroupTable, UserGroupTable, VkUserTable}
 import javax.inject.Inject
 import model.VkUser
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.PostgresProfile
+import slick.jdbc.{JdbcProfile, PostgresProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UserDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[PostgresProfile] { // extends DelegableAuthInfoDAO[OAuth2Info]
+  extends HasDatabaseConfigProvider[JdbcProfile] { // extends DelegableAuthInfoDAO[OAuth2Info]
   import profile.api._
   import dao.table.Converters._
 

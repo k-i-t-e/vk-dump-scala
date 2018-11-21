@@ -1,17 +1,16 @@
 package dao
 
 import com.google.inject.{Inject, Singleton}
-import com.sun.scenario.effect.Offset
 import dao.table.{GroupTable, UserGroupTable, VkUserTable}
 import model.Group
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.PostgresProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[PostgresProfile] {
+  extends HasDatabaseConfigProvider[JdbcProfile] {
   import profile.api._
 
   private val groups = TableQuery[GroupTable]
@@ -98,4 +97,6 @@ class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)
       }.result
     }
   }
+
+  def deleteAll(): Future[Int] = db.run(groups.delete.transactionally)
 }

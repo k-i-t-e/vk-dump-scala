@@ -4,13 +4,13 @@ import com.google.inject.{Inject, Singleton}
 import dao.table.ImageTable
 import model.Image
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
-import slick.jdbc.PostgresProfile
+import slick.jdbc.{JdbcProfile, PostgresProfile}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ImageDao @Inject()(override protected val dbConfigProvider: DatabaseConfigProvider)(ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[PostgresProfile] {
+  extends HasDatabaseConfigProvider[JdbcProfile] {
   import profile.api._
 
   private val images = TableQuery[ImageTable]
@@ -29,4 +29,5 @@ class ImageDao @Inject()(override protected val dbConfigProvider: DatabaseConfig
   def getLastImage(groupId: Long): Future[Option[Image]] =
     db.run(images.filter(_.groupId === groupId).sortBy(_.id.desc).result.headOption)
 
+  def deleteAll(): Future[Int] = db.run(images.delete.transactionally)
 }
