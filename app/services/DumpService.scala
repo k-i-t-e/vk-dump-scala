@@ -2,6 +2,7 @@ package services
 
 import akka.actor.ActorSystem
 import com.google.inject.{Inject, Singleton}
+import com.vk.api.sdk.exceptions.ApiAuthException
 import model.{Group, Image, VkUser}
 import play.Logger
 import play.api.Configuration
@@ -10,6 +11,7 @@ import services.client.VkClient
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 @Singleton
 class DumpService @Inject()(actorSystem: ActorSystem,
@@ -33,7 +35,7 @@ class DumpService @Inject()(actorSystem: ActorSystem,
               imageService.findLastImage(group.id).map {
                 case Some(image) =>
                   val images = vkClientService.getClient(user.get).loadImagesTillPost(group, image.postId)
-                  imageService.insertImages(images)
+                  imageService.insertImages(images.reverse)
                 case None => fetchAllImages(group, user.get, group.offset)
               }
             }
@@ -47,10 +49,12 @@ class DumpService @Inject()(actorSystem: ActorSystem,
     def _fetchAll(client: VkClient, offset: Option[Int]): Unit = {
       offset match {
         case Some(0) =>
+          val (i, _) = client.loadImagesFromBottom(group, offset)
+          imageService.insertImages(i.reverse)
           groupService.updateGroup(group.withOffset(None).withFetched(true))
         case _ =>
           val (i, o) = client.loadImagesFromBottom(group, offset)
-          imageService.insertImages(i)
+          imageService.insertImages(i.reverse)
           groupService.updateGroup(group.withOffset(Some(o)))
           _fetchAll(client, Some(o))
       }
@@ -67,7 +71,14 @@ class DumpService @Inject()(actorSystem: ActorSystem,
           client <- vkClientService.getClient(user.head.id) if user.nonEmpty
         } yield {
           userDetailsService.updateLastAccessed(user.head.id)
-          client.loadImages(group, offset, Some(count))
+          client.loadImages(group, offset, Some(count)) match {
+            case Success(images) => images
+            case Failure(exception) => exception match {
+              case e: ApiAuthException =>
+                if (e.getCode == 5) vkClientService.removeClient(user.head)
+                throw e
+            }
+          }
         }
       case None => throw new IllegalArgumentException(s"No group with ID '$groupId' found")
     }

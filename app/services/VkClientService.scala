@@ -28,4 +28,8 @@ class VkClientService @Inject()(userDetailsService: UserDetailsService)(implicit
       c
     })(c => c)
   }
+
+  def removeClient(user: VkUser): Unit = {
+    clientMap.remove(user.id)
+  }
 }

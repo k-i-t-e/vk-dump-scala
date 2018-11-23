@@ -14,6 +14,7 @@ import model.{Group, Image, VkUser}
 import play.Logger
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   private val MAX_ALLOWED_POSTS_COUNT = 100
@@ -29,20 +30,22 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
     }
   }, 0, refreshPeriod)
 
-  def loadImages(group: Group, offset: Int, limit: Option[Int] = None): Seq[Image] = {
-    val userActor = new UserActor(user.id.toInt, user.accessToken.get)
-    val (imagesPortion, totalCount, postsCount) = loadImagePortion(group, userActor,
-                                 Math.min(MAX_ALLOWED_POSTS_COUNT, limit.getOrElse(MAX_ALLOWED_POSTS_COUNT)), offset)
-    val realLimit = limit match {
-      case Some(l) => l
-      case None => totalCount
-    }
+  def loadImages(group: Group, offset: Int, limit: Option[Int] = None): Try[Seq[Image]] = {
+    Try {
+      val userActor = new UserActor(user.id.toInt, user.accessToken.get)
+      val (imagesPortion, totalCount, postsCount) = loadImagePortion(group, userActor,
+        Math.min(MAX_ALLOWED_POSTS_COUNT, limit.getOrElse(MAX_ALLOWED_POSTS_COUNT)), offset)
+      val realLimit = limit match {
+        case Some(l) => l
+        case None => totalCount
+      }
 
-    if (realLimit <= postsCount) {
-      imagesPortion
-    } else {
-      imagesPortion ++ (1 until Math.ceil(realLimit.toDouble / MAX_ALLOWED_POSTS_COUNT).toInt)
-        .flatMap(i => loadImagePortion(group, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
+      if (realLimit <= postsCount) {
+        imagesPortion
+      } else {
+        imagesPortion ++ (1 until Math.ceil(realLimit.toDouble / MAX_ALLOWED_POSTS_COUNT).toInt)
+          .flatMap(i => loadImagePortion(group, userActor, calculatePageSize(i, realLimit), MAX_ALLOWED_POSTS_COUNT * i)._1)
+      }
     }
   }
 
