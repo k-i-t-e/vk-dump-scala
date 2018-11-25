@@ -11,9 +11,10 @@ case class Image(postId: Long,
                  createdDate: LocalDateTime,
                  groupId: Long,
                  id: Option[Long],
-                 imageType: ImageType = ImageType.Image) {
+                 imageType: ImageType = ImageType.Image,
+                 gif: Option[String] = None) {
 
-  def withId(newId: Long) = Image(postId, urls, thumbnail, createdDate, groupId, Some(newId), imageType)
+  def withId(newId: Long) = Image(postId, urls, thumbnail, createdDate, groupId, Some(newId), imageType, gif)
 }
 
 object ImageType extends Enumeration {

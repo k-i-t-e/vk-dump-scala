@@ -10,7 +10,7 @@ import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.groups.GroupFull
 import com.vk.api.sdk.objects.photos.Photo
 import com.vk.api.sdk.objects.wall.WallpostAttachmentType
-import model.{Group, Image, VkUser}
+import model.{Group, Image, ImageType, VkUser}
 import play.Logger
 
 import scala.collection.JavaConverters._
@@ -107,20 +107,29 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
 
       val images = for {
         p <- postsResult.getItems.asScala if p.getAttachments != null
-        a <- p.getAttachments.asScala if a.getType == WallpostAttachmentType.PHOTO
+        a <- p.getAttachments.asScala if a.getType == WallpostAttachmentType.PHOTO ||
+          (a.getType == WallpostAttachmentType.DOC && a.getDoc.getExt == "gif")
       } yield {
-        Image(p.getId.toLong,
-              Map(
-                75 -> a.getPhoto.getPhoto75,
-                130 -> a.getPhoto.getPhoto130,
-                604 -> a.getPhoto.getPhoto604,
-                807 -> a.getPhoto.getPhoto807,
-                1280 -> a.getPhoto.getPhoto1280,
-                2560 -> a.getPhoto.getPhoto2560
-              ), getThumbnail(a.getPhoto),
+        val urls = if (a.getType == WallpostAttachmentType.PHOTO) {
+          Map(
+            75 -> a.getPhoto.getPhoto75,
+            130 -> a.getPhoto.getPhoto130,
+            604 -> a.getPhoto.getPhoto604,
+            807 -> a.getPhoto.getPhoto807,
+            1280 -> a.getPhoto.getPhoto1280,
+            2560 -> a.getPhoto.getPhoto2560
+          )
+        } else {
+          a.getDoc.getPreview.getPhoto.getSizes.asScala
+            .foldLeft(Map.empty[Int, String])((acc, s) => acc + (s.getWidth.intValue() -> s.getSrc))
+        }
+
+        Image(p.getId.toLong, urls, getThumbnail(urls),
               Instant.ofEpochSecond(p.getDate.toLong).atZone(ZoneId.of("UTC")).toLocalDateTime,
               group.id,
-              None)
+              None,
+              if (a.getType == WallpostAttachmentType.PHOTO) ImageType.Image else ImageType.Gif,
+              if (a.getType == WallpostAttachmentType.DOC) Some(a.getDoc.getUrl) else None)
       }
 
       (images, postsResult.getCount.toInt, postsResult.getItems.size)
@@ -128,7 +137,7 @@ class VkClient(user: VkUser, refreshPeriod: Long, maxRequests: Int) {
   }
 
   private def getThumbnail(photo: Photo) = photo.getPhoto604
-
+  private def getThumbnail(urls: Map[Int, String]) = urls.getOrElse(604, urls.filter(_._1 < 604).maxBy(_._1)._2)
   private def doRequest[R](requestFunction: => R): R = {
     requestSemaphore.acquire()
     requestFunction

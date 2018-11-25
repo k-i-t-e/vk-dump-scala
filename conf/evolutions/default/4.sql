@@ -3,6 +3,7 @@
 # --- !Ups
 
 ALTER TABLE image ADD COLUMN image_type INTEGER;
+ALTER TABLE image ADD COLUMN gif TEXT;
 
 UPDATE image SET image_type = 1;
 

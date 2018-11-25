@@ -17,6 +17,8 @@ class ImageTable(tag: Tag) extends Table[Image](tag, "image") {
   def postId  = column[Long]("post_id")
   def createdDate = column[LocalDateTime]("created_date")
   def imageType = column[ImageType]("image_type")
+  def gif = column[String]("gif")
 
-  override def * = (postId, urls, thumbnail, createdDate, groupId, id.?, imageType) <> (Image.tupled, Image.unapply)
+  override def * = (postId, urls, thumbnail, createdDate, groupId, id.?, imageType, gif.?) <>
+    (Image.tupled, Image.unapply)
 }
