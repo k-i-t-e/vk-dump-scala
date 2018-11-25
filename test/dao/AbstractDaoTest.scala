@@ -22,7 +22,7 @@ abstract class AbstractDaoTest extends Module with PlaySpecification with Mockit
 
   protected val mock: SignInController = mock[SignInController]
 
-  protected def appWithInMemoryDatabase = GuiceApplicationBuilder()
+  protected def appWithTestDatabase = GuiceApplicationBuilder()
     .disable[SilhouetteModule]
     .overrides(bind[SignInController].toInstance(mock))
     .bindings(bind[UserDetailsService].to[UserDetailsServiceImpl])

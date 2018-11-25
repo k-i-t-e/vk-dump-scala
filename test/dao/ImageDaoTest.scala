@@ -2,7 +2,7 @@ package dao
 
 import java.time.LocalDateTime
 
-import model.{Group, Image}
+import model.{Group, Image, ImageType}
 import play.api.test.WithApplication
 
 import scala.concurrent.Await
@@ -11,7 +11,7 @@ import scala.concurrent.duration.Duration
 class ImageDaoTest extends AbstractDaoTest {
   "ImageDao" should {
     "Image" in {
-      "Created and Loaded" in new WithApplication(appWithInMemoryDatabase) {
+      "Created and Loaded" in new WithApplication(appWithTestDatabase) {
         val imageDao = app.injector.instanceOf[ImageDao]
         val groupDao = app.injector.instanceOf[GroupDao]
 
@@ -27,12 +27,13 @@ class ImageDaoTest extends AbstractDaoTest {
 
         val loadedImage = loaded.head
         loadedImage.urls must beEqualTo(urls)
+        loadedImage.imageType shouldEqual ImageType.Image
       }
     }
   }
 
   override def afterAll(): Unit = {
-    new WithApplication(appWithInMemoryDatabase) {
+    new WithApplication(appWithTestDatabase) {
       val imageDao = app.injector.instanceOf[ImageDao]
       val groupDao = app.injector.instanceOf[GroupDao]
 

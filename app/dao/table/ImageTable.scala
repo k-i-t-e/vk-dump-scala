@@ -3,6 +3,7 @@ package dao.table
 import java.time.LocalDateTime
 
 import model.Image
+import model.ImageType.ImageType
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted.Tag
 
@@ -15,6 +16,7 @@ class ImageTable(tag: Tag) extends Table[Image](tag, "image") {
   def thumbnail = column[String]("thumbnail")
   def postId  = column[Long]("post_id")
   def createdDate = column[LocalDateTime]("created_date")
+  def imageType = column[ImageType]("image_type")
 
-  override def * = (postId, urls, thumbnail, createdDate, groupId, id.?) <> (Image.tupled, Image.unapply)
+  override def * = (postId, urls, thumbnail, createdDate, groupId, id.?, imageType) <> (Image.tupled, Image.unapply)
 }
