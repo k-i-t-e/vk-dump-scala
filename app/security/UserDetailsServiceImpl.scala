@@ -3,13 +3,13 @@ package security
 import com.google.inject.{Inject, Singleton}
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.impl.providers.CommonSocialProfile
-import dao.UserSlickDao
+import dao.UserDao
 import model.VkUser
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UserDetailsServiceImpl @Inject()(userDao: UserSlickDao)(implicit ec: ExecutionContext) extends UserDetailsService {
+class UserDetailsServiceImpl @Inject()(userDao: UserDao)(implicit ec: ExecutionContext) extends UserDetailsService {
   override def retrieve(loginInfo: LoginInfo): Future[Option[VkUser]] =
     Future.successful(Some(new VkUser(loginInfo.providerKey.toLong, null, null, None, None)))
 

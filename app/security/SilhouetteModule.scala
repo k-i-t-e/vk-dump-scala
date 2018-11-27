@@ -1,7 +1,7 @@
 package security
 
 import com.google.inject.name.Named
-import com.google.inject.{AbstractModule, Provides}
+import com.google.inject.{AbstractModule, Inject, Provides}
 import com.mohiva.play.silhouette.api.crypto.{Crypter, CrypterAuthenticatorEncoder, Signer}
 import com.mohiva.play.silhouette.api.services.AuthenticatorService
 import com.mohiva.play.silhouette.api.util._
@@ -12,6 +12,7 @@ import com.mohiva.play.silhouette.impl.providers.oauth2.VKProvider
 import com.mohiva.play.silhouette.impl.providers.{DefaultSocialStateHandler, OAuth2Info, OAuth2Settings}
 import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, PlayCacheLayer, SecureRandomIDGenerator}
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
+import dao.{UserDao, UserMongoDao, UserSlickDao}
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
@@ -21,8 +22,15 @@ import play.api.mvc.CookieHeaderEncoding
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SilhouetteModule extends AbstractModule with ScalaModule {
+class SilhouetteModule @Inject()(environment: play.api.Environment, configuration: Configuration) extends AbstractModule with ScalaModule {
   override def configure()= {
+    configuration.getOptional[String]("backend").getOrElse("jdbc") match {
+      case "mongodb" =>
+        bind[UserDao].to[UserMongoDao]
+      case "jdbc" =>
+        bind[UserDao].to[UserSlickDao]
+    }
+
     bind[UserDetailsService].to[UserDetailsServiceImpl]
     bind[DelegableAuthInfoDAO[OAuth2Info]].toInstance(new InMemoryAuthInfoDAO[OAuth2Info])
 
@@ -103,4 +111,24 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
 
     new JcaCrypter(config)
   }
+
+  /*@Provides
+  @Named("mongoUserDao")
+  def provideMongoUserDao(reactiveMongoApi: ReactiveMongoApi = null, configuration: Configuration): UserDao = {
+    if (configuration.getOptional[String]("backend").getOrElse("jdbc") == "mongodb") {
+      new UserMongoDao(reactiveMongoApi)
+    } else {
+      null
+    }
+  }
+
+  @Provides
+  @Named("jdbcUserDao")
+  def provideJdbcUserDao(dbConfigProvider: DatabaseConfigProvider = null, configuration: Configuration): UserDao = {
+    if (configuration.getOptional[String]("backend").getOrElse("jdbc") == "jdbc") {
+      new UserSlickDao(dbConfigProvider)
+    } else {
+      null
+    }
+  }*/
 }
