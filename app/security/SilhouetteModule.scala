@@ -12,7 +12,9 @@ import com.mohiva.play.silhouette.impl.providers.oauth2.VKProvider
 import com.mohiva.play.silhouette.impl.providers.{DefaultSocialStateHandler, OAuth2Info, OAuth2Settings}
 import com.mohiva.play.silhouette.impl.util.{DefaultFingerprintGenerator, PlayCacheLayer, SecureRandomIDGenerator}
 import com.mohiva.play.silhouette.persistence.daos.{DelegableAuthInfoDAO, InMemoryAuthInfoDAO}
-import dao.{UserDao, UserMongoDao, UserSlickDao}
+import dao.mongo.UserMongoDao
+import dao.UserDao
+import dao.jdbc.UserSlickDao
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule

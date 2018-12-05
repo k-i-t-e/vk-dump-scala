@@ -1,4 +1,4 @@
-package dao.table
+package dao.jdbc.table
 
 import slick.jdbc.PostgresProfile.api._
 import slick.lifted

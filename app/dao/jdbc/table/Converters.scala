@@ -1,4 +1,4 @@
-package dao.table
+package dao.jdbc.table
 
 import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneOffset}

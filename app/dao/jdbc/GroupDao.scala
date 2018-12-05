@@ -1,7 +1,7 @@
-package dao
+package dao.jdbc
 
 import com.google.inject.{Inject, Singleton}
-import dao.table.{GroupTable, UserGroupTable, VkUserTable}
+import dao.jdbc.table.{GroupTable, UserGroupTable, VkUserTable}
 import model.Group
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile

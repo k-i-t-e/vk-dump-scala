@@ -2,7 +2,7 @@ package services
 
 import com.google.inject.{Inject, Singleton}
 import controllers.vo.GroupRequest
-import dao.GroupDao
+import dao.jdbc.GroupDao
 import model.Group
 
 import scala.concurrent.{ExecutionContext, Future}

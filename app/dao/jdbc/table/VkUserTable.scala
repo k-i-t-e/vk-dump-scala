@@ -1,4 +1,4 @@
-package dao.table
+package dao.jdbc.table
 
 import java.time.LocalDateTime
 

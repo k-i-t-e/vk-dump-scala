@@ -1,9 +1,10 @@
-package dao
+package dao.jdbc
 
 import java.time.{Clock, LocalDateTime}
 
 import com.google.inject.Singleton
-import dao.table.{GroupTable, UserGroupTable, VkUserTable}
+import dao.UserDao
+import dao.jdbc.table.{GroupTable, UserGroupTable, VkUserTable}
 import javax.inject.Inject
 import model.VkUser
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -14,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UserSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with UserDao { // extends DelegableAuthInfoDAO[OAuth2Info]
-  import dao.table.Converters._
+  import dao.jdbc.table.Converters._
   import profile.api._
 
   private val users = TableQuery[VkUserTable]
