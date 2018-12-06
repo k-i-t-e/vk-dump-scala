@@ -2,7 +2,7 @@ package dao
 
 import java.time.LocalDateTime
 
-import dao.jdbc.{GroupDao, ImageSlickDao}
+import dao.jdbc.{GroupSlickDao, ImageSlickDao}
 import model.{Group, Image, ImageType}
 import play.api.test.WithApplication
 

@@ -1,6 +1,7 @@
 package dao.jdbc
 
 import com.google.inject.{Inject, Singleton}
+import dao.GroupDao
 import dao.jdbc.table.{GroupTable, UserGroupTable, VkUserTable}
 import model.Group
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
@@ -9,8 +10,8 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GroupDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
-  extends HasDatabaseConfigProvider[JdbcProfile] {
+class GroupSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
+  extends HasDatabaseConfigProvider[JdbcProfile] with GroupDao {
   import profile.api._
 
   private val groups = TableQuery[GroupTable]
