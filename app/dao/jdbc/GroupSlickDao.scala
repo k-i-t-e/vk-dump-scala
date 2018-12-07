@@ -99,5 +99,5 @@ class GroupSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
     }
   }
 
-  def deleteAll(): Future[Int] = db.run(groups.delete.transactionally)
+  def deleteAll(): Future[_] = db.run(groups.delete.transactionally)
 }

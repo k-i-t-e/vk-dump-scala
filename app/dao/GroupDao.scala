@@ -25,5 +25,5 @@ trait GroupDao {
 
   def findGroupsByUser(userId: Long): Future[Seq[Group]]
 
-  def deleteAll(): Future[Int]
+  def deleteAll(): Future[_]
 }

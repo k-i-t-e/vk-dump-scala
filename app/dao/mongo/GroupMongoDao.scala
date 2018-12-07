@@ -97,7 +97,11 @@ class GroupMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: E
                                      document("$set" -> document("users" -> newIds))))
     } yield res
 
-  override def findGroupsByUser(userId: Long): Future[Seq[Group]] = ???
+  override def findGroupsByUser(userId: Long): Future[Seq[Group]] = groups.flatMap {
+    _.find(document("users" -> userId))
+      .cursor[Group]()
+      .collect[Seq](-1, Cursor.FailOnError())
+   }
 
-  override def deleteAll(): Future[Int] = ???
+  override def deleteAll(): Future[_] = groups.flatMap(_.delete().one(document()))
 }
