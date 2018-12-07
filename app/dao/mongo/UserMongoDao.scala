@@ -5,11 +5,11 @@ import java.time._
 import com.google.inject.Singleton
 import dao.UserDao
 import javax.inject.Inject
-import model.{Group, VkUser}
+import model.VkUser
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.Cursor
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, Macros, document}
+import reactivemongo.bson.{BSONDocument, document}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,10 +21,6 @@ class UserMongoDao @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec
   private def groups: Future[BSONCollection] = db.map(_.collection[BSONCollection]("vk_group"))
 
   import dao.mongo.Converters._
-
-  implicit def userWriter: BSONDocumentWriter[VkUser] = Macros.writer[VkUser]
-  implicit def userReader: BSONDocumentReader[VkUser] = Macros.reader[VkUser]
-  implicit def groupReader: BSONDocumentReader[Group] = Macros.reader[Group]
 
   override def find(id: Long): Future[Option[VkUser]] = users.flatMap(_.find(document("id" -> id)).one[VkUser])
 

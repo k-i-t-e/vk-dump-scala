@@ -11,25 +11,15 @@ import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter,
 import scala.concurrent.{ExecutionContext, Future}
 
 class GroupMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends GroupDao {
+  import Converters._
+
   private val db = reactiveMongoApi.database
   private def groups = db.map(_.collection[BSONCollection]("vk_group"))
   private def users = db.map(_.collection[BSONCollection]("vk_user"))
 
-  implicit object GroupWriter extends BSONDocumentWriter[Group] {
-    override def write(group: Group): BSONDocument = BSONDocument(
-        "id" -> group.id,
-        "domain" -> group.domain,
-        "name" -> group.name,
-        "alias" -> group.alias,
-        "fetched" -> group.fetched,
-        "offset" -> group.offset,
-        "users" -> group.users.map(_.map(_.id)))
-  }
-  implicit def groupReader: BSONDocumentReader[Group] = Macros.reader[Group]
+  override def findById(groupId: Long): Future[Option[Group]] = groups.flatMap(_.find(document("id" -> groupId)).one[Group])
 
-  override def findById(groupId: Long): Future[Option[Group]] = groups.flatMap(_.find(document("id" -> groupId)).one)
-
-  override def findByDomain(domain: String): Future[Option[Group]] = groups.flatMap(_.find(document("domain" -> domain)).one)
+  override def findByDomain(domain: String): Future[Option[Group]] = groups.flatMap(_.find(document("domain" -> domain)).one[Group])
 
   override def findAll(): Future[Seq[Group]] = groups.flatMap {
     _.find(document())
@@ -71,12 +61,11 @@ class GroupMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: E
     _.update(document("id" -> group.id), GroupWriter.write(group) ++ document("users" -> userIds))
   }
 
-  override def updateGroup(group: Group): Future[_] = groups.flatMap {
-    _.findAndUpdate(
+  override def updateGroup(group: Group): Future[_] = groups.flatMap (col => {
+    col.findAndUpdate(
       document("id" -> group.id),
-      document("$set" -> (document(GroupWriter.write(group)) -- "users")))
-  }
-
+      document("$set" -> (document(GroupWriter.write(group)) -- "users"))).map(_ => {})
+  })
 
   override def insertGroup(group: Group, userIds: Seq[Long]): Future[_] = groups.flatMap {
     _.insert(GroupWriter.write(group) ++ document("users" -> userIds))

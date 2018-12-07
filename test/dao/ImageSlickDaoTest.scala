@@ -9,7 +9,7 @@ import play.api.test.WithApplication
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class ImageSlickDaoTest extends AbstractDaoTest {
+class ImageSlickDaoTest extends AbstractSlickDaoTest {
   "ImageDao" should {
     "Image" in {
       "Created and Loaded" in new WithApplication(appWithTestDatabase) {
