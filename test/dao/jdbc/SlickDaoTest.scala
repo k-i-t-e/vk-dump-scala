@@ -3,7 +3,6 @@ package dao.jdbc
 import controllers.SignInController
 import dao.{GroupDao, ImageDao, UserDao}
 import org.specs2.mock.Mockito
-import org.specs2.specification.AfterAll
 import play.api
 import play.api.Configuration
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -11,7 +10,7 @@ import play.api.inject.{Binding, Module}
 import play.api.test.PlaySpecification
 import security.{SilhouetteModule, UserDetailsService, UserDetailsServiceImpl}
 
-trait SlickDaoTest extends Module with PlaySpecification with Mockito with AfterAll {
+trait SlickDaoTest extends Module with PlaySpecification with Mockito {
   protected val testDatabaseConfiguration: Map[String, Any] = Map(
     "backend" -> "jdbc",
     "slick.dbs.default.profile"     -> "slick.jdbc.PostgresProfile$",
