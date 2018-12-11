@@ -19,17 +19,17 @@ abstract class GroupDaoTest extends Module with PlaySpecification with Mockito w
   protected def daoName: String
 
   daoName should {
-    "Group" in {
+    "Group" in  {
       "Created and Loaded" in new WithApplication(appWithTestDatabase) {
         val groupDao = app.injector.instanceOf[GroupDao]
         checkGroupDaoType(groupDao)
-
         val userDao = app.injector.instanceOf[UserDao]
         checkUserDaoType(userDao)
 
+        sync(userDao.add(testUser))
+
         val group = Group(1, "test", "testName", "testAlias", true, Some(1000), Some(Seq(testUser)))
         Await.ready(groupDao.insertGroup(group, Seq(testUser.id)), Duration.Inf)
-        Await.ready(userDao.add(testUser), Duration.Inf)
 
         val groups = Await.result(groupDao.findAll(), Duration.Inf)
         groups must not(beEmpty)
@@ -53,6 +53,31 @@ abstract class GroupDaoTest extends Module with PlaySpecification with Mockito w
         val loadedByUser = sync(groupDao.findGroupsByUser(testUser.id))
         assertEquals(group, loadedByUser.head)
       }
+      /*"Updated" in new WithApplication(appWithTestDatabase) {
+        val groupDao = app.injector.instanceOf[GroupDao]
+        checkGroupDaoType(groupDao)
+        val userDao = app.injector.instanceOf[UserDao]
+        checkUserDaoType(userDao)
+
+        val group = Group(2, "test", "testName", "testAlias", true, Some(1000), Some(Seq(testUser)))
+        sync(groupDao.insertGroup(group, Seq(testUser.id)))
+
+        val updated1 = group
+          .withAlias("XXX")
+          .withFetched(false)
+          .withOffset(Some(123))
+
+        val user2 = VkUser(2L, Some("User2"), Some("Test2"), None, None)
+        //sync(userDao.add(testUser))
+        sync(userDao.add(user2))
+        sync(groupDao.updateGroup(updated1))
+
+        val loaded1 = sync(groupDao.findWithUsers(group.id))
+        assertEquals(updated1, loaded1.get)
+        assertEquals(testUser, loaded1.get.users.get.head)
+
+        //val updated2 = updated1.withAlias("YYY")
+      }*/
     }
   }
 
@@ -73,7 +98,9 @@ abstract class GroupDaoTest extends Module with PlaySpecification with Mockito w
   override def afterAll(): Unit = {
     new WithApplication(appWithTestDatabase) {
       val groupDao = app.injector.instanceOf[GroupDao]
+      val userDao = app.injector.instanceOf[UserDao]
       Await.ready(groupDao.deleteAll(), Duration.Inf)
+      sync { userDao.deleteAll() }
     }
   }
 }

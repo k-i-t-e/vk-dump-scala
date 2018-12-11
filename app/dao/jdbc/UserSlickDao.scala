@@ -72,4 +72,8 @@ class UserSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvi
        query.update(LocalDateTime.now(Clock.systemUTC())).transactionally
     }
   }
+
+  override def deleteAll(): Future[_] = db.run {
+     DBIO.seq(userGroups.delete, users.delete).transactionally
+  }
 }

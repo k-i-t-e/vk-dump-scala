@@ -1,6 +1,7 @@
 package dao.mongo
 
 import controllers.SignInController
+import dao.{GroupDao, ImageDao, UserDao}
 import org.specs2.mock.Mockito
 import org.specs2.specification.AfterAll
 import play.api
@@ -26,4 +27,8 @@ trait MongoDaoTest extends Module with PlaySpecification with Mockito with After
     .configure(testDatabaseConfiguration).build()
 
   override def bindings(environment: api.Environment, configuration: Configuration): Seq[Binding[_]] = ???
+
+  protected def checkUserDaoType: UserDao => Unit = _ must beAnInstanceOf[UserMongoDao]
+  protected def checkGroupDaoType: GroupDao => Unit = _ must beAnInstanceOf[GroupMongoDao]
+  protected def checkImageDaoType: ImageDao => Unit = _ must beAnInstanceOf[ImageMongoDao]
 }

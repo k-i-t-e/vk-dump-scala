@@ -6,7 +6,7 @@ import model.{Group, VkUser}
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.Cursor
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, Macros, document}
+import reactivemongo.bson.{BSONDocument, document}
 
 import scala.concurrent.{ExecutionContext, Future}
 

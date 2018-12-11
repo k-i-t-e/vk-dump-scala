@@ -49,4 +49,6 @@ class UserMongoDao @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec
   override def updateLastAccess(userId: Long): Future[_] = users.flatMap {
     _.update(document("id" -> userId), document("lastAccessed" -> LocalDateTime.now(Clock.systemUTC())))
   }
+
+  override def deleteAll(): Future[_] = users.flatMap { _.delete().one(document()) }
 }

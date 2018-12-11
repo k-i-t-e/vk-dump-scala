@@ -6,8 +6,9 @@ import com.google.inject.Inject
 import dao.ImageDao
 import model.{Image, ImageType}
 import play.modules.reactivemongo.ReactiveMongoApi
+import reactivemongo.api.Cursor
 import reactivemongo.api.collections.bson.BSONCollection
-import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONElement, BSONString, Macros, document}
+import reactivemongo.bson.{BSONDocument, BSONDocumentReader, BSONDocumentWriter, BSONElement, BSONObjectID, BSONString, Macros, document}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,28 +38,36 @@ class ImageMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: E
         .getOrElse(Map.empty)
         .map({case (k, v) => k.toInt -> v})
 
+      val gif = bson.getAs[String]("gif")
+
       val imageOpt = for {
-        id <- bson.getAs[Long]("id")
+        id <- bson.getAs[BSONObjectID]("_id")
         postId <- bson.getAs[Long]("postId")
         thumbnail <- bson.getAs[String]("thumbnail")
         createdDate <- bson.getAs[LocalDateTime]("createdDate")
         groupId <- bson.getAs[Long]("groupId")
-        imageType <- bson.getAs[Int]("imageType ")
-        gif <- bson.getAs[String]("gif")
-      } yield Image(postId, urls, thumbnail, createdDate, groupId, Some(id), ImageType(imageType), Some(gif))
+        imageType <- bson.getAs[Int]("imageType")
+
+      } yield Image(postId, urls, thumbnail, createdDate, groupId, Some(id.hashCode), ImageType(imageType), gif)
 
       imageOpt.get
     }
   }
 
-  override def findImagesByGroup(groupId: Long, limit: Int, offset: Int): Future[Seq[Image]] = ???
+  override def findImagesByGroup(groupId: Long, limit: Int, offset: Int): Future[Seq[Image]] = images.flatMap {
+    _.find(document("groupId" -> groupId))
+      .sort(document("_id" -> -1))
+      .skip(offset)
+      .cursor[Image]()
+      .collect[Seq](limit, Cursor.FailOnError())
+  }
 
   override def insertImages(imgs: Seq[Image]): Future[_] = images.flatMap(_.insert[Image](ordered = true).many(imgs))
 
   override def getLastImage(groupId: Long): Future[Option[Image]] = images.flatMap {
    _
      .find(document("groupId" -> groupId))
-     .sort(document("_id" -> "desc"))
+     .sort(document("_id" -> -1))
      .one[Image]
   }
 

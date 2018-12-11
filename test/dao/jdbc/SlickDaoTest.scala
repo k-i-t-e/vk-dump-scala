@@ -1,6 +1,7 @@
 package dao.jdbc
 
 import controllers.SignInController
+import dao.{GroupDao, ImageDao, UserDao}
 import org.specs2.mock.Mockito
 import org.specs2.specification.AfterAll
 import play.api
@@ -31,4 +32,7 @@ trait SlickDaoTest extends Module with PlaySpecification with Mockito with After
 
   override def bindings(environment: api.Environment, configuration: Configuration): Seq[Binding[_]] = ???
 
+  protected def checkUserDaoType: UserDao => Unit = _ must beAnInstanceOf[UserSlickDao]
+  protected def checkGroupDaoType: GroupDao => Unit = _ must beAnInstanceOf[GroupSlickDao]
+  protected def checkImageDaoType: ImageDao => Unit = _ must beAnInstanceOf[ImageSlickDao]
 }
