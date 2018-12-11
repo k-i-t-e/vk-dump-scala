@@ -1,20 +1,19 @@
-package dao
+package dao.jdbc
 
 import java.time.LocalDateTime
 
-import dao.jdbc.{GroupSlickDao, ImageSlickDao}
 import model.{Group, Image, ImageType}
 import play.api.test.WithApplication
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-class ImageSlickDaoTest extends AbstractSlickDaoTest {
+class ImageSlickDaoTest extends SlickDaoTest {
   "ImageDao" should {
     "Image" in {
       "Created and Loaded" in new WithApplication(appWithTestDatabase) {
         val imageDao = app.injector.instanceOf[ImageSlickDao]
-        val groupDao = app.injector.instanceOf[GroupDao]
+        val groupDao = app.injector.instanceOf[GroupSlickDao]
 
         val group = Group(1, "test", "test", "test", true, None)
         Await.ready(groupDao.insertGroup(group, Seq.empty), Duration.Inf)
@@ -36,7 +35,7 @@ class ImageSlickDaoTest extends AbstractSlickDaoTest {
   override def afterAll(): Unit = {
     new WithApplication(appWithTestDatabase) {
       val imageDao = app.injector.instanceOf[ImageSlickDao]
-      val groupDao = app.injector.instanceOf[GroupDao]
+      val groupDao = app.injector.instanceOf[GroupSlickDao]
 
       Await.ready(imageDao.deleteAll(), Duration.Inf)
       Await.ready(groupDao.deleteAll(), Duration.Inf)
