@@ -44,11 +44,11 @@ class GroupSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
       u <- users if u.id === gu.userId
     } yield (g, u)
 
-    db.run(query.result.headOption)
+    db.run(query.result)
       .map(
         _.groupBy(_._1)
           .map(p => p._1 -> p._2.map(_._2))
-          .foldLeft(Seq[Group]()){ (acc, pair) => acc :+ pair._1.withUsers(Some(pair._2.toSeq)) }
+          .foldLeft(Seq[Group]()){ (acc, pair) => acc :+ pair._1.withUsers(Some(pair._2)) }
           .headOption
       )
   }
@@ -72,11 +72,11 @@ class GroupSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProv
     db.run(sequence.transactionally)
   }
 
-  def addGroupUsers(groupId: Long, userIds: Iterable[Long]):Future[_] = {
+  def addGroupUsers(groupId: Long, userIds: Iterable[Long]): Future[_] = {
     if (userIds.isEmpty) {
       Future.successful(None)
     } else {
-      db.run(groupUsers ++= userIds.map((_, groupId)))
+      db.run((groupUsers ++= userIds.map((_, groupId))).transactionally)
     }
   }
 

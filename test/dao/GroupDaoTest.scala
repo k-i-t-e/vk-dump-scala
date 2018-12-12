@@ -2,7 +2,7 @@ package dao
 
 import model.{Group, VkUser}
 import org.specs2.mock.Mockito
-import org.specs2.specification.{AfterAll, AfterEach}
+import org.specs2.specification.AfterAll
 import play.api.Application
 import play.api.inject.Module
 import play.api.test.{PlaySpecification, WithApplication}
@@ -10,7 +10,7 @@ import play.api.test.{PlaySpecification, WithApplication}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-abstract class GroupDaoTest extends Module with PlaySpecification with Mockito with AfterEach with AfterAll {
+abstract class GroupDaoTest extends Module with PlaySpecification with Mockito with AfterAll {
   protected def appWithTestDatabase: Application
   protected def checkUserDaoType: UserDao => Unit
   protected def checkGroupDaoType: GroupDao => Unit
@@ -86,6 +86,20 @@ abstract class GroupDaoTest extends Module with PlaySpecification with Mockito w
         assertEquals(updated2, loaded2.get)
         loaded2.get.users.get.size must beEqualTo(1)
         assertEquals(user2, loaded2.get.users.get.head)
+
+        sync { groupDao.addGroupUsers(updated2.id, Seq(testUser.id)) }
+
+        val loaded3 = sync { groupDao.findWithUsers(updated2.id) }
+        loaded3.get.users.get.size must beEqualTo(2)
+        loaded3.get.users.get.find(_.id == testUser.id) must beSome
+        loaded3.get.users.get.find(_.id == user2.id) must beSome
+
+        sync { groupDao.removeGroupUsers(loaded3.get.id, Seq(user2.id)) }
+
+        val loaded4 = sync { groupDao.findWithUsers(loaded3.get.id) }
+        loaded4.get.users.get.size must beEqualTo(1)
+        loaded4.get.users.get.find(_.id == testUser.id) must beSome
+        loaded4.get.users.get.find(_.id == user2.id) must beNone
       }
     }
   }
@@ -103,8 +117,6 @@ abstract class GroupDaoTest extends Module with PlaySpecification with Mockito w
   }
 
   def sync[R](futureResult: Future[R]) = Await.result(futureResult, Duration.Inf)
-
-  override def after(): Unit = {}
 
   override def afterAll(): Unit = {
     new WithApplication(appWithTestDatabase) {

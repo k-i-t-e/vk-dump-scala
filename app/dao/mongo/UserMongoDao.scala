@@ -34,20 +34,28 @@ class UserMongoDao @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec
 
   override def findUsersWithGroup(id: Long): Future[Seq[VkUser]] = findByGroups(document("id" -> id))
 
-  private def findByGroups(doc: BSONDocument) = for {
-      groupUserIds <- groups.flatMap {
-          _.find(doc, document("users" -> 1))
-            .requireOne[BSONDocument]
-        }
-      u <- users.flatMap {
-          _.find(document("id" -> document("$in" -> groupUserIds)))
-            .cursor[VkUser]()
-            .collect[Seq](-1, Cursor.FailOnError[Seq[VkUser]]())
-        }
+  private def findByGroups(doc: BSONDocument) = {
+    def findGroupIds = groups.flatMap {
+      _.find(doc, Some(document("users" -> 1)))
+        .requireOne[BSONDocument]
+    }
+    def findUsersWithGroupIds(groupUserIds: Seq[Long]) = users.flatMap {
+      _.find(document("id" -> document("$in" -> groupUserIds)))
+        .cursor[VkUser]()
+        .collect[Seq](-1, Cursor.FailOnError[Seq[VkUser]]())
+    }
+
+    for {
+      groupUserIds <- findGroupIds
+      u <- findUsersWithGroupIds(groupUserIds.getAs[Seq[Long]]("users").getOrElse(Seq.empty))
     } yield u
+  }
 
   override def updateLastAccess(userId: Long): Future[_] = users.flatMap {
-    _.update(document("id" -> userId), document("lastAccessed" -> LocalDateTime.now(Clock.systemUTC())))
+    _.update(document("id" -> userId),
+             document("$set" -> document(
+               "lastAccessed" -> LocalDateTime.now(Clock.systemUTC())
+             )))
   }
 
   override def deleteAll(): Future[_] = users.flatMap { _.delete().one(document()) }
