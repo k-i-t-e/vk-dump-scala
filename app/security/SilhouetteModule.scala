@@ -113,24 +113,4 @@ class SilhouetteModule @Inject()(environment: play.api.Environment, configuratio
 
     new JcaCrypter(config)
   }
-
-  /*@Provides
-  @Named("mongoUserDao")
-  def provideMongoUserDao(reactiveMongoApi: ReactiveMongoApi = null, configuration: Configuration): UserDao = {
-    if (configuration.getOptional[String]("backend").getOrElse("jdbc") == "mongodb") {
-      new UserMongoDao(reactiveMongoApi)
-    } else {
-      null
-    }
-  }
-
-  @Provides
-  @Named("jdbcUserDao")
-  def provideJdbcUserDao(dbConfigProvider: DatabaseConfigProvider = null, configuration: Configuration): UserDao = {
-    if (configuration.getOptional[String]("backend").getOrElse("jdbc") == "jdbc") {
-      new UserSlickDao(dbConfigProvider)
-    } else {
-      null
-    }
-  }*/
 }

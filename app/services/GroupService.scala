@@ -2,13 +2,13 @@ package services
 
 import com.google.inject.{Inject, Singleton}
 import controllers.vo.GroupRequest
-import dao.jdbc.GroupSlickDao
+import dao.GroupDao
 import model.Group
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GroupService @Inject()(groupDao: GroupSlickDao, vkClientService: VkClientService)(implicit ec: ExecutionContext) {
+class GroupService @Inject()(groupDao: GroupDao, vkClientService: VkClientService)(implicit ec: ExecutionContext) {
   def loadGroupsWithUsers: Future[Seq[Group]] = groupDao.findAllWithUsers()
   def loadGroups: Future[Seq[Group]] = groupDao.findAll()
   def loadGroup(domain: String): Future[Option[Group]] = groupDao.findByDomain(domain)

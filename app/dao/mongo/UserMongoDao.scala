@@ -13,7 +13,6 @@ import reactivemongo.bson.{BSONDocument, document}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 class UserMongoDao @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:  ExecutionContext) extends UserDao {
 
   private val db = reactiveMongoApi.database

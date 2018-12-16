@@ -1,13 +1,13 @@
 package services
 
 import com.google.inject.{Inject, Singleton}
-import dao.jdbc.ImageSlickDao
+import dao.ImageDao
 import model.Image
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ImageService @Inject()(imageDao: ImageSlickDao)(ec: ExecutionContext) {
+class ImageService @Inject()(imageDao: ImageDao)(ec: ExecutionContext) {
   def loadImages(groupId: Long, page: Int, pageSize: Int): Future[Seq[Image]] =
     imageDao.findImagesByGroup(groupId, pageSize, page * pageSize)
 

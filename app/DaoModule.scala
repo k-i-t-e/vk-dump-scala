@@ -1,7 +1,7 @@
 import com.google.inject.{AbstractModule, Inject}
-import dao.{GroupDao, ImageDao, UserDao}
 import dao.jdbc.{GroupSlickDao, ImageSlickDao, UserSlickDao}
 import dao.mongo.{GroupMongoDao, ImageMongoDao, UserMongoDao}
+import dao.{GroupDao, ImageDao, UserDao}
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 

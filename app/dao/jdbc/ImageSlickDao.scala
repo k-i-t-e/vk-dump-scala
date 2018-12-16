@@ -9,7 +9,6 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 class ImageSlickDao @Inject()(override protected val dbConfigProvider: DatabaseConfigProvider)(ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with ImageDao {
   import profile.api._

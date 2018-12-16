@@ -12,7 +12,6 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
 class UserSlickDao @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with UserDao { // extends DelegableAuthInfoDAO[OAuth2Info]
   import dao.jdbc.table.Converters._
