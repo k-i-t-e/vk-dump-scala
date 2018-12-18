@@ -19,8 +19,8 @@ class ImageSlickDao @Inject()(override protected val dbConfigProvider: DatabaseC
       images
         .filter(_.groupId === groupId)
         .sortBy(_.id.desc)
-        .take(limit)
         .drop(offset)
+        .take(limit)
         .result
     }
 
