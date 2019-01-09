@@ -35,7 +35,7 @@ class GroupMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: E
       g <- groups.flatMap { _.find(document())
                             .cursor[BSONDocument]()
                             .fold(Seq.empty[Group])((res, doc) => {
-                              val group = groupReader.read(doc)
+                              val group = GroupReader.read(doc)
                               val withUsers = group.withUsers(doc.getAs[Seq[Long]]("users")
                                                                 .map(_.withFilter(u.contains).map(u(_))))
                               res :+ withUsers
@@ -50,7 +50,7 @@ class GroupMongoDao @Inject()(reactiveMongoApi: ReactiveMongoApi)(implicit ec: E
       g <- groups.flatMap { _.find(document("id" -> groupId))
         .cursor[BSONDocument]()
         .fold(Seq.empty[Group])((res, doc) => {
-          val group = groupReader.read(doc)
+          val group = GroupReader.read(doc)
           val withUsers = group.withUsers(doc.getAs[Seq[Long]]("users")
                                             .map(_.withFilter(u.contains).map(u(_))))
           res :+ withUsers

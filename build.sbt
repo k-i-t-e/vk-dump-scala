@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick-evolutions" % "3.0.3")
 
 libraryDependencies += "org.reactivemongo" %% "play2-reactivemongo" % "0.16.0-play26"
+libraryDependencies += "org.mongodb.scala" %% "mongo-scala-driver" % "2.5.0"
 
 // Silhouette config
 val silhouetteVer = "5.0.0"
